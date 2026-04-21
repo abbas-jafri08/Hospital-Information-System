@@ -10,42 +10,30 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: "*"
+}));
 app.use(express.json());
 
 // Routes
 app.use("/api/patients", patientRoutes);
 
-// Test route
+// Root test route
 app.get("/", (req, res) => {
-  res.send("🚀 Hospital API Running");
+  res.send("API Running 🚀");
 });
 
-// Test DB route
-app.get("/api/test-db", async (req, res) => {
-  try {
-    const collections = await mongoose.connection.db
-      .listCollections()
-      .toArray();
+// MongoDB connect
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("✅ MongoDB Connected");
 
-    res.json({
-      message: "DB Working ✅",
-      collections,
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+      console.log(`🔥 Server running on port ${PORT}`);
     });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
-// MongoDB connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.log("❌ Mongo Error:", err.message));
-
-// Server start
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`🔥 Server running on port ${PORT}`);
-});
+  })
+  .catch((err) => {
+    console.log("❌ MongoDB Error:", err.message);
+  });
